@@ -1,0 +1,43 @@
+version: '3'
+services:
+  server:
+    container_name: server
+    image: 'redis'
+    ports:
+      - "6379:6379"
+    networks:
+      - dev-network
+  java-service:
+    container_name: app
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    links:
+      - server
+    depends_on:
+      - server
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=server
+    networks:
+      - dev-network
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:server:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - server
+    links:
+      - server
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
